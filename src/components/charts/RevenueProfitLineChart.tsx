@@ -67,12 +67,45 @@ function RevenueProfitLineChart({ data }: RevenueProfitLineChartProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltip);
+  const [isInView, setIsInView] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    const target = wrapperRef.current;
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    setHasAnimated(false);
+  }, [data]);
 
   useEffect(() => {
     const svgElement = svgRef.current;
     if (!svgElement) {
       return () => {};
     }
+
+    const shouldAnimate = isInView && !hasAnimated;
+
+    setTooltip(initialTooltip);
 
     const width = 960;
     const height = 320;
@@ -135,12 +168,32 @@ function RevenueProfitLineChart({ data }: RevenueProfitLineChartProps) {
         .attr('d', lineGenerator(data) ?? '');
 
       const totalLength = linePath.node()?.getTotalLength() ?? 0;
-      linePath
-        .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
-        .attr('stroke-dashoffset', totalLength)
-        .transition()
-        .duration(900)
-        .attr('stroke-dashoffset', 0);
+      const isLastLine = config.key === lineConfigs[lineConfigs.length - 1].key;
+      const finalizeLine = () => {
+        linePath.attr('stroke-dasharray', null).attr('stroke-dashoffset', null);
+      };
+
+      if (shouldAnimate) {
+        const transition = linePath
+          .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
+          .attr('stroke-dashoffset', totalLength)
+          .transition()
+          .duration(900)
+          .attr('stroke-dashoffset', 0);
+
+        transition.on('end', () => {
+          finalizeLine();
+          if (isLastLine) {
+            setHasAnimated(true);
+          }
+        });
+      } else if (hasAnimated) {
+        finalizeLine();
+      } else {
+        linePath
+          .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
+          .attr('stroke-dashoffset', totalLength);
+      }
 
       focusCircles[config.key] = chart
         .append('circle')
@@ -168,7 +221,9 @@ function RevenueProfitLineChart({ data }: RevenueProfitLineChartProps) {
     const hideTooltip = () => {
       setTooltip(initialTooltip);
       Object.values(focusCircles).forEach((circle) => {
-        circle?.transition().duration(150).style('opacity', 0);
+        if (circle) {
+          circle.transition().duration(150).style('opacity', 0);
+        }
       });
     };
 
@@ -182,7 +237,9 @@ function RevenueProfitLineChart({ data }: RevenueProfitLineChartProps) {
       .on('pointerleave', hideTooltip)
       .on('pointerenter', () => {
         Object.values(focusCircles).forEach((circle) => {
-          circle?.interrupt().style('opacity', 1);
+          if (circle) {
+            circle.interrupt().style('opacity', 1);
+          }
         });
       })
       .on('pointermove', (event) => {
@@ -207,10 +264,12 @@ function RevenueProfitLineChart({ data }: RevenueProfitLineChartProps) {
 
         lineConfigs.forEach((config) => {
           const circle = focusCircles[config.key];
-          circle
-            ?.attr('cx', cx)
-            .attr('cy', yScale(datum[config.key]))
-            .style('opacity', 1);
+          if (circle) {
+            circle
+              .attr('cx', cx)
+              .attr('cy', yScale(datum[config.key]))
+              .style('opacity', 1);
+          }
         });
 
         updateTooltip(event, datum);
@@ -219,7 +278,7 @@ function RevenueProfitLineChart({ data }: RevenueProfitLineChartProps) {
     return () => {
       overlay.on('pointerleave', null).on('pointerenter', null).on('pointermove', null);
     };
-  }, [data]);
+  }, [data, isInView, hasAnimated]);
 
   return (
     <div className={styles.chartContainer}>
