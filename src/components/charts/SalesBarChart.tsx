@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect, useId,
+  useMemo, useRef, useState,
+} from 'react';
 import {
   axisBottom,
   axisLeft,
@@ -35,13 +38,29 @@ const initialTooltip: TooltipState = {
   y: 0,
 };
 
+type SortMode = 'default' | 'asc' | 'desc';
+
 function SalesBarChart({ data }: SalesBarChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltip);
+  const [sortMode, setSortMode] = useState<SortMode>('default');
+  const sortSelectId = useId();
+
+  const chartData = useMemo(() => {
+    if (sortMode === 'asc') {
+      return [...data].sort((a, b) => a.sales - b.sales);
+    }
+    if (sortMode === 'desc') {
+      return [...data].sort((a, b) => b.sales - a.sales);
+    }
+    return data;
+  }, [data, sortMode]);
 
   useEffect(() => {
     if (!svgRef.current) return;
+
+    setTooltip(initialTooltip);
 
     const width = 640;
     const height = 360;
@@ -73,12 +92,12 @@ function SalesBarChart({ data }: SalesBarChartProps) {
     const chart = svg.append<SVGGElement>('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     const xScale = scaleBand()
-      .domain(data.map((d) => d.month))
+      .domain(chartData.map((d) => d.month))
       .range([0, innerWidth])
       .padding(0.18);
 
     const yScale = scaleLinear()
-      .domain([0, max(data, (d) => d.sales)! * 1.1])
+      .domain([0, max(chartData, (d) => d.sales)! * 1.1])
       .nice()
       .range([innerHeight, 0]);
 
@@ -118,7 +137,7 @@ function SalesBarChart({ data }: SalesBarChartProps) {
 
     const bars = barsGroup
       .selectAll<SVGRectElement, MonthlySales>('rect')
-      .data(data, (datum) => datum.month);
+      .data(chartData, (datum) => datum.month);
 
     const handleInteraction = (selection: Selection<SVGRectElement, MonthlySales, SVGGElement, unknown>) => {
       selection
@@ -175,7 +194,7 @@ function SalesBarChart({ data }: SalesBarChartProps) {
 
     barsGroup
       .selectAll<SVGTextElement, MonthlySales>('text')
-      .data(data, (d) => d.month)
+      .data(chartData, (d) => d.month)
       .join(
         (enter) => enter
           .append('text')
@@ -203,26 +222,45 @@ function SalesBarChart({ data }: SalesBarChartProps) {
           .attr('y', innerHeight)
           .remove(),
       );
-  }, [data]);
+  }, [chartData]);
 
   return (
-    <div className={styles.chartWrapper} ref={wrapperRef}>
-      <svg ref={svgRef} className={styles.svg} role="img" aria-label="Monthly sales bar chart" />
-      {tooltip.visible ? (
-        <div
-          className={styles.tooltip}
-          style={{
-            left: tooltip.x,
-            top: tooltip.y,
-          }}
+    <div className={styles.chartContainer}>
+      <div className={styles.chartToolbar}>
+        <label className={styles.chartToolbarLabel} htmlFor={sortSelectId}>
+          Sort by:
+        </label>
+        <select
+          id={sortSelectId}
+          className={styles.select}
+          value={sortMode}
+          aria-label="Sort monthly sales"
+          aria-labelledby={`label-${sortSelectId}`}
+          onChange={(event) => setSortMode(event.target.value as SortMode)}
         >
-          <strong className={styles.strong}>{tooltip.label}</strong>
-          <span className={styles.span}>
-            $
-            {tooltip.value.toLocaleString()}
-          </span>
-        </div>
-      ) : null}
+          <option value="default">Month (Jan–Dec)</option>
+          <option value="desc">Sales: High → Low</option>
+          <option value="asc">Sales: Low → High</option>
+        </select>
+      </div>
+      <div className={styles.chartWrapper} ref={wrapperRef}>
+        <svg ref={svgRef} className={styles.svg} role="img" aria-label="Monthly sales bar chart" />
+        {tooltip.visible ? (
+          <div
+            className={styles.tooltip}
+            style={{
+              left: tooltip.x,
+              top: tooltip.y,
+            }}
+          >
+            <strong className={styles.strong}>{tooltip.label}</strong>
+            <span className={styles.span}>
+              $
+              {tooltip.value.toLocaleString()}
+            </span>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
