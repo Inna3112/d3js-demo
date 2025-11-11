@@ -1,0 +1,108 @@
+{
+  "name": "onix-next",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit && next lint . --max-warnings=0",
+    "tsc": "tsc --noEmit",
+    "prepare": "husky install",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "find-deadcode": "knip"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.7.0",
+    "accept-language": "^3.0.18",
+    "d3": "^7.9.0",
+    "i18next": "^23.7.11",
+    "i18next-browser-languagedetector": "^7.2.0",
+    "i18next-resources-to-backend": "^1.2.0",
+    "next": "15.3.1",
+    "next-auth": "^4.24.11",
+    "react": "^18.3.1",
+    "react-cookie": "^6.1.1",
+    "react-dom": "^18",
+    "react-i18next": "^14.0.3",
+    "react-redux": "^9.2.0",
+    "sass": "^1.69.5",
+    "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4",
+    "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
+    "@storybook/addon-essentials": "^8.6.7",
+    "@storybook/addon-interactions": "^8.6.7",
+    "@storybook/addon-links": "^8.6.7",
+    "@storybook/addon-mdx-gfm": "^8.6.7",
+    "@storybook/blocks": "^8.6.7",
+    "@storybook/nextjs": "^8.6.7",
+    "@storybook/react": "^8.6.7",
+    "@storybook/test": "^8.6.7",
+    "@testing-library/jest-dom": "^6.2.0",
+    "@testing-library/react": "^14.1.2",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^18",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2",
+    "commitizen": "^4.3.0",
+    "eslint": "^8",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-next": "15.2.2",
+    "eslint-plugin-jest": "^27.6.0",
+    "eslint-plugin-require-explicit-generics": "^1.0.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "eslint-plugin-storybook": "^0.6.15",
+    "eslint-plugin-testing-library": "^6.2.0",
+    "husky": "^8.0.3",
+    "inquirer": "^9.2.12",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jest-fetch-mock": "^3.0.3",
+    "knip": "^5.0.4",
+    "storybook": "^8.6.7",
+    "storybook-addon-mock": "^4.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/@digitalroute/cz-conventional-changelog-for-jira",
+      "jiraPrefix": "JIRA",
+      "skipScope": false,
+      "customScope": true,
+      "skipBreaking": true
+    }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "subject-case": [
+        2,
+        "never"
+      ],
+      "references-empty": [
+        2,
+        "never"
+      ]
+    },
+    "parserPreset": {
+      "parserOpts": {
+        "issuePrefixes": [
+          "NEXT-",
+          "#"
+        ]
+      }
+    }
+  }
+}

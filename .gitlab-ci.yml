@@ -1,0 +1,58 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  CI_GITLAB_API_TOKEN: $CI_GITLAB_API_TOKEN
+  DOCKER_REPOSITORY_IMAGE: $DOCKER_REPOSITORY_IMAGE
+
+lint:
+  stage: lint
+  only:
+    - main
+    - develop
+    - merge_requests
+  image: $BUILD_DOCKER_IMAGE
+  script:
+    - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${CI_REGISTRY}
+    - docker build --network=host -t react-${CI_COMMIT_SHA}:latest -f DockerfileCI .
+    - docker run --rm --name react-${CI_COMMIT_SHA} react-${CI_COMMIT_SHA}:latest npm run lint
+
+test:
+  stage: test
+  only:
+    - main
+    - develop
+    - merge_requests
+  image: $BUILD_DOCKER_IMAGE
+  script:
+    - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${CI_REGISTRY}
+    - >
+      docker build
+      --network=host -t react-${CI_COMMIT_SHA}:latest -f DockerfileCI .
+    - docker run --rm --name react-${CI_COMMIT_SHA} react-${CI_COMMIT_SHA}:latest npm run test
+
+build:
+  stage: build
+  only:
+    - main
+    - develop
+  image: $BUILD_DOCKER_IMAGE
+  script:
+    - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${CI_REGISTRY}
+    - >
+      docker build
+      --network=host -t ${DOCKER_REPOSITORY_IMAGE} .
+    - docker push ${DOCKER_REPOSITORY_IMAGE}
+
+deploy:
+  stage: deploy
+  only:
+    - main
+    - develop
+  image: $DEPLOY_DOCKER_IMAGE
+  script:
+    - grdp-ctl
+
