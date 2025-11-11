@@ -73,7 +73,7 @@ function RevenueProfitLineChart({ data }: RevenueProfitLineChartProps) {
   useEffect(() => {
     const target = wrapperRef.current;
     if (!target) {
-      return;
+      return () => {};
     }
 
     const observer = new IntersectionObserver(
