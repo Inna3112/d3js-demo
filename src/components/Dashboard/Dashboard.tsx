@@ -4,10 +4,12 @@ import {
   useCallback, useEffect, useMemo, useState,
 } from 'react';
 
-import ClientsPieChart from './charts/ClientsPieChart';
-import SalesBarChart from './charts/SalesBarChart';
-import UsersLineChart from './charts/UsersLineChart';
-import ChartCard from './ChartCard';
+import ChartCard from '../ChartChard/ChartCard';
+import ClientsPieChart from '../charts/ClientsPieChart';
+import SalesBarChart from '../charts/SalesBarChart';
+import UsersLineChart from '../charts/UsersLineChart';
+
+import styles from './Dashboard.module.scss';
 
 import { type DashboardData, generateDashboardData } from '@/data/mockData';
 
@@ -64,26 +66,26 @@ function Dashboard({ initialData }: DashboardProps) {
   }, []);
 
   return (
-    <section className="dashboard" aria-live="polite">
-      <div className="dashboard__controls">
-        <div className="dashboard__cycle">
-          <span className="dashboard__cycle-label">Scenario</span>
-          <span className="dashboard__cycle-value">{iteration}</span>
+    <section className={styles.dashboard} aria-live="polite">
+      <div className={styles.controls}>
+        <div className={styles.cycle}>
+          <span className={styles.cycleLabel}>Scenario</span>
+          <span className={styles.cycleValue}>{iteration}</span>
         </div>
-        <button type="button" className="dashboard__button" onClick={onChangeData}>
+        <button type="button" className={styles.button} onClick={onChangeData}>
           Change data
         </button>
       </div>
-      <div className="dashboard__metrics">
+      <div className={styles.metrics}>
         {metrics.map((metric) => (
-          <div className="dashboard__metric" key={metric.label}>
-            <span className="dashboard__metric-label">{metric.label}</span>
-            <span className="dashboard__metric-value">{metric.value}</span>
-            {metric.helper ? <span className="dashboard__metric-helper">{metric.helper}</span> : null}
+          <div className={styles.metric} key={metric.label}>
+            <span className={styles.metricLabel}>{metric.label}</span>
+            <span className={styles.metricValue}>{metric.value}</span>
+            {metric.helper ? <span className={styles.metricHelper}>{metric.helper}</span> : null}
           </div>
         ))}
       </div>
-      <div className="dashboard__grid">
+      <div className={styles.grid}>
         <ChartCard
           title="Monthly Sales"
           subtitle="Bar chart"

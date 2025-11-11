@@ -13,6 +13,8 @@ import {
 import type { Selection } from 'd3-selection';
 import type { MonthlySales } from '@/data/mockData';
 
+import styles from './Chart.module.scss';
+
 type SalesBarChartProps = {
   data: MonthlySales[],
 };
@@ -204,18 +206,18 @@ function SalesBarChart({ data }: SalesBarChartProps) {
   }, [data]);
 
   return (
-    <div className="chart-wrapper" ref={wrapperRef}>
-      <svg ref={svgRef} role="img" aria-label="Monthly sales bar chart" />
+    <div className={styles.chartWrapper} ref={wrapperRef}>
+      <svg ref={svgRef} className={styles.svg} role="img" aria-label="Monthly sales bar chart" />
       {tooltip.visible ? (
         <div
-          className="chart-tooltip"
+          className={styles.tooltip}
           style={{
             left: tooltip.x,
             top: tooltip.y,
           }}
         >
-          <strong>{tooltip.label}</strong>
-          <span>
+          <strong className={styles.strong}>{tooltip.label}</strong>
+          <span className={styles.span}>
             $
             {tooltip.value.toLocaleString()}
           </span>

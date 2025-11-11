@@ -16,6 +16,8 @@ import {
 
 import type { UserGrowth } from '@/data/mockData';
 
+import styles from './Chart.module.scss';
+
 type UsersLineChartProps = {
   data: UserGrowth[],
 };
@@ -221,18 +223,18 @@ function UsersLineChart({ data }: UsersLineChartProps) {
   }, [data]);
 
   return (
-    <div className="chart-wrapper" ref={wrapperRef}>
-      <svg ref={svgRef} role="img" aria-label="Monthly active users line chart" />
+    <div className={styles.chartWrapper} ref={wrapperRef}>
+      <svg ref={svgRef} className={styles.svg} role="img" aria-label="Monthly active users line chart" />
       {tooltip.visible ? (
         <div
-          className="chart-tooltip"
+          className={styles.tooltip}
           style={{
             left: tooltip.x,
             top: tooltip.y,
           }}
         >
-          <strong>{tooltip.label}</strong>
-          <span>
+          <strong className={styles.strong}>{tooltip.label}</strong>
+          <span className={styles.span}>
             {tooltip.value.toLocaleString()}
             {' '}
             users

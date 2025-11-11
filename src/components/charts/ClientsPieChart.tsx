@@ -14,6 +14,8 @@ import {
 
 import type { ClientDistribution } from '@/data/mockData';
 
+import styles from './Chart.module.scss';
+
 type ClientsPieChartProps = {
   data: ClientDistribution[],
 };
@@ -164,7 +166,7 @@ function ClientsPieChart({ data }: ClientsPieChartProps) {
           .attr('class', 'pie-label')
           .attr('transform', (d) => toTransform(d))
           .style('opacity', 0)
-          .text((d) => `${Math.round(d.data.clients)} users`)
+          .text((d) => `${Math.round(d.data.clients)}`)
           .transition()
           .delay(300)
           .duration(500)
@@ -183,35 +185,35 @@ function ClientsPieChart({ data }: ClientsPieChartProps) {
   }, [colorScale, data]);
 
   return (
-    <div className="chart-wrapper chart-wrapper--center" ref={wrapperRef}>
-      <svg ref={svgRef} role="img" aria-label="Client distribution pie chart" />
+    <div className={`${styles.chartWrapper} ${styles.chartWrapperCenter}`} ref={wrapperRef}>
+      <svg ref={svgRef} className={styles.svg} role="img" aria-label="Client distribution pie chart" />
       {tooltip.visible ? (
         <div
-          className="chart-tooltip"
+          className={styles.tooltip}
           style={{
             left: tooltip.x,
             top: tooltip.y,
           }}
         >
-          <strong>{tooltip.label}</strong>
-          <span>
+          <strong className={styles.strong}>{tooltip.label}</strong>
+          <span className={styles.span}>
             {tooltip.value.toLocaleString()}
             {' '}
             clients
           </span>
         </div>
       ) : null}
-      <div className="chart-legend">
+      <div className={styles.chartLegend}>
         {data.map((item) => (
-          <div className="chart-legend__item" key={item.region}>
+          <div className={styles.legendItem} key={item.region}>
             <span
-              className="chart-legend__swatch"
+              className={styles.legendSwatch}
               style={{ backgroundColor: colorScale(item.region) }}
             />
-            <span className="chart-legend__label">
+            <span className={styles.legendLabel}>
               {item.region}
               {' '}
-              <span className="chart-legend__value">
+              <span className={styles.legendValue}>
                 {item.clients.toLocaleString()}
                 {' '}
                 clients

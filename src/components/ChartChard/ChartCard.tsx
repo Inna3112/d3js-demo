@@ -2,6 +2,8 @@
 
 import type { ReactNode } from 'react';
 
+import styles from './ChartCard.module.scss';
+
 type ChartCardProps = {
   title: string,
   subtitle?: string,
@@ -13,15 +15,15 @@ function ChartCard({
   title, subtitle, description, children,
 }: ChartCardProps) {
   return (
-    <article className="chart-card">
-      <header className="chart-card__header">
+    <article className={styles.chartCard}>
+      <header className={styles.header}>
         <div>
-          <h2>{title}</h2>
-          {subtitle ? <span className="chart-card__subtitle">{subtitle}</span> : null}
+          <h2 className={styles.title}>{title}</h2>
+          {subtitle ? <span className={styles.subtitle}>{subtitle}</span> : null}
         </div>
-        {description ? <p className="chart-card__description">{description}</p> : null}
+        {description ? <p className={styles.description}>{description}</p> : null}
       </header>
-      <div className="chart-card__body">{children}</div>
+      <div className={styles.body}>{children}</div>
     </article>
   );
 }

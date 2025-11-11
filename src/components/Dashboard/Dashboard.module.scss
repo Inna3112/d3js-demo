@@ -1,0 +1,104 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2.5rem;
+  border-radius: 32px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.5));
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 1.8rem;
+    border-radius: 24px;
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cycle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  color: #22d3ee;
+}
+
+.cycleLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: rgba(94, 234, 212, 0.7);
+}
+
+.cycleValue {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: linear-gradient(135deg, #22d3ee, #38bdf8);
+  box-shadow: 0 15px 40px rgba(34, 211, 238, 0.35);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.button:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 20px 45px rgba(56, 189, 248, 0.4);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.metric {
+  padding: 1.2rem 1.4rem;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.metricLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.metricValue {
+  font-size: 1.65rem;
+  font-weight: 700;
+}
+
+.metricHelper {
+  color: rgba(148, 163, 184, 0.85);
+  font-size: 0.9rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.75rem;
+}
