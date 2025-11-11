@@ -102,3 +102,7 @@
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.75rem;
 }
+
+.fullWidth {
+  width: 100%;
+}

@@ -13,10 +13,17 @@ export type UserGrowth = {
   users: number,
 };
 
+export type RevenueProfitPoint = {
+  month: string,
+  revenue: number,
+  profit: number,
+};
+
 export type DashboardData = {
   sales: MonthlySales[],
   clients: ClientDistribution[],
   users: UserGrowth[],
+  revenueProfit: RevenueProfitPoint[],
 };
 
 const MONTHS = [
@@ -57,5 +64,24 @@ export const generateDashboardData = (): DashboardData => {
     clients: Math.round((value / totalClients) * 1000),
   }));
 
-  return { sales, clients, users };
+  let revenueBaseline = 42000 + Math.random() * 8000;
+  const revenueProfit = MONTHS.map((month) => {
+    revenueBaseline += 2000 + Math.random() * 2500;
+    const revenue = Math.round(revenueBaseline + Math.random() * 5000);
+    const margin = 0.18 + Math.random() * 0.12;
+    const profit = Math.round(revenue * margin);
+
+    return {
+      month,
+      revenue,
+      profit,
+    };
+  });
+
+  return {
+    sales,
+    clients,
+    users,
+    revenueProfit,
+  };
 };

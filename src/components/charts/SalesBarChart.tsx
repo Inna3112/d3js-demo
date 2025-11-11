@@ -234,8 +234,6 @@ function SalesBarChart({ data }: SalesBarChartProps) {
           id={sortSelectId}
           className={styles.select}
           value={sortMode}
-          aria-label="Sort monthly sales"
-          aria-labelledby={`label-${sortSelectId}`}
           onChange={(event) => setSortMode(event.target.value as SortMode)}
         >
           <option value="default">Month (Jan–Dec)</option>

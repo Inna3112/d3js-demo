@@ -6,6 +6,7 @@ import {
 
 import ChartCard from '../ChartChard/ChartCard';
 import ClientsPieChart from '../charts/ClientsPieChart';
+import RevenueProfitLineChart from '../charts/RevenueProfitLineChart';
 import SalesBarChart from '../charts/SalesBarChart';
 import UsersLineChart from '../charts/UsersLineChart';
 
@@ -106,6 +107,15 @@ function Dashboard({ initialData }: DashboardProps) {
           description="Pointer over the chart to see month-by-month changes."
         >
           <UsersLineChart data={dataset.users} />
+        </ChartCard>
+      </div>
+      <div className={styles.fullWidth}>
+        <ChartCard
+          title="Revenue & Profit"
+          subtitle="Trend line chart"
+          description="Compare revenue against profit to monitor margins."
+        >
+          <RevenueProfitLineChart data={dataset.revenueProfit} />
         </ChartCard>
       </div>
     </section>
