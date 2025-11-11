@@ -1,17 +1,28 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
 
 import ClientsPieChart from './charts/ClientsPieChart';
 import SalesBarChart from './charts/SalesBarChart';
 import UsersLineChart from './charts/UsersLineChart';
 import ChartCard from './ChartCard';
 
-import { generateDashboardData } from '@/data/mockData';
+import { type DashboardData, generateDashboardData } from '@/data/mockData';
 
-function Dashboard() {
-  const [dataset, setDataset] = useState(() => generateDashboardData());
+type DashboardProps = {
+  initialData: DashboardData,
+};
+
+function Dashboard({ initialData }: DashboardProps) {
+  const [dataset, setDataset] = useState<DashboardData>(initialData);
   const [iteration, setIteration] = useState(1);
+
+  useEffect(() => {
+    setDataset(initialData);
+    setIteration(1);
+  }, [initialData]);
 
   const metrics = useMemo(() => {
     const totalSales = dataset.sales.reduce((acc, item) => acc + item.sales, 0);
