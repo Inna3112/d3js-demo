@@ -1,22 +1,22 @@
 export type MonthlySales = {
-  month: string;
-  sales: number;
+  month: string,
+  sales: number,
 };
 
 export type ClientDistribution = {
-  region: string;
-  clients: number;
+  region: string,
+  clients: number,
 };
 
 export type UserGrowth = {
-  month: string;
-  users: number;
+  month: string,
+  users: number,
 };
 
 export type DashboardData = {
-  sales: MonthlySales[];
-  clients: ClientDistribution[];
-  users: UserGrowth[];
+  sales: MonthlySales[],
+  clients: ClientDistribution[],
+  users: UserGrowth[],
 };
 
 const MONTHS = [
@@ -59,4 +59,3 @@ export const generateDashboardData = (): DashboardData => {
 
   return { sales, clients, users };
 };
-

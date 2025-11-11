@@ -1,6 +1,9 @@
 'use client';
 
 import {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
+import {
   arc as d3Arc,
   interpolate,
   pie as d3Pie,
@@ -8,19 +11,19 @@ import {
   schemeTableau10,
   select,
 } from 'd3';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ClientDistribution } from '../../data/mockData';
+
+import type { ClientDistribution } from '@/data/mockData';
 
 type ClientsPieChartProps = {
-  data: ClientDistribution[];
+  data: ClientDistribution[],
 };
 
 type TooltipState = {
-  visible: boolean;
-  label: string;
-  value: number;
-  x: number;
-  y: number;
+  visible: boolean,
+  label: string,
+  value: number,
+  x: number,
+  y: number,
 };
 
 const initialTooltip: TooltipState = {
@@ -31,7 +34,7 @@ const initialTooltip: TooltipState = {
   y: 0,
 };
 
-const ClientsPieChart = ({ data }: ClientsPieChartProps) => {
+function ClientsPieChart({ data }: ClientsPieChartProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltip);
@@ -49,7 +52,7 @@ const ClientsPieChart = ({ data }: ClientsPieChartProps) => {
     const height = 360;
     const radius = Math.min(width, height) / 2 - 8;
 
-    const svg = select(svgRef.current);
+    const svg = select<SVGSVGElement, unknown>(svgRef.current);
     svg.selectAll('*').remove();
 
     svg
@@ -57,7 +60,7 @@ const ClientsPieChart = ({ data }: ClientsPieChartProps) => {
       .attr('preserveAspectRatio', 'xMidYMid meet');
 
     const chart = svg
-      .append('g')
+      .append<SVGGElement>('g')
       .attr('transform', `translate(${width / 2}, ${height / 2})`);
 
     const pieGenerator = d3Pie<ClientDistribution>()
@@ -83,6 +86,21 @@ const ClientsPieChart = ({ data }: ClientsPieChartProps) => {
 
     const hideTooltip = () => setTooltip(initialTooltip);
 
+    const handleSlicePointer = (
+      event: unknown,
+      datum: d3.PieArcDatum<ClientDistribution>,
+    ) => {
+      if (!(event instanceof PointerEvent)) {
+        return;
+      }
+      updateTooltip(event, datum.data);
+    };
+
+    const toTransform = (datum: d3.PieArcDatum<ClientDistribution>) => {
+      const [centroidX, centroidY] = arcGenerator.centroid(datum);
+      return `translate(${centroidX}, ${centroidY})`;
+    };
+
     const arcs = chart.selectAll<SVGPathElement, d3.PieArcDatum<ClientDistribution>>('path').data(
       pieGenerator(data),
       (d) => d.data.region,
@@ -90,82 +108,77 @@ const ClientsPieChart = ({ data }: ClientsPieChartProps) => {
 
     arcs
       .join(
-        (enter) =>
-          enter
-            .append('path')
-            .attr('class', 'pie-slice')
-            .attr('fill', (d) => colorScale(d.data.region))
-            .attr('d', (d) =>
-              arcGenerator({
-                ...d,
-                endAngle: d.startAngle,
-              }) ?? '',
-            )
-            .on('pointerenter', (event, datum) => updateTooltip(event, datum.data))
-            .on('pointermove', (event, datum) => updateTooltip(event, datum.data))
-            .on('pointerleave', hideTooltip)
-            .transition()
-            .duration(800)
-            .attrTween('d', function (d) {
-              const interpolateAngles = interpolate(d.startAngle, d.endAngle);
-              const original = { ...d };
-              return (t) =>
-                arcGenerator({
-                  ...original,
-                  endAngle: interpolateAngles(t),
-                }) ?? '';
-            }),
-        (update) =>
-          update
-            .on('pointerenter', (event, datum) => updateTooltip(event, datum.data))
-            .on('pointermove', (event, datum) => updateTooltip(event, datum.data))
-            .on('pointerleave', hideTooltip)
-            .transition()
-            .duration(750)
-            .attrTween('d', function (d) {
-              const previous = this.getAttribute('d');
-              const current = arcGenerator(d);
-              if (!previous || !current) {
-                return () => current ?? '';
-              }
-              const interpolatePath = interpolate(previous, current);
-              return (t) => interpolatePath(t);
-            }),
-        (exit) =>
-          exit
-            .transition()
-            .duration(400)
-            .style('opacity', 0)
-            .remove(),
+        (enter) => enter
+          .append('path')
+          .attr('class', 'pie-slice')
+          .attr('fill', (d) => colorScale(d.data.region))
+          .attr('d', (d) => arcGenerator({
+            ...d,
+            endAngle: d.startAngle,
+          }) ?? '')
+          .on('pointerenter', handleSlicePointer)
+          .on('pointermove', handleSlicePointer)
+          .on('pointerleave', hideTooltip)
+          .transition()
+          .duration(800)
+          .attrTween('d', (d) => {
+            const interpolateAngles = interpolate(d.startAngle, d.endAngle);
+            const original = { ...d };
+            return (t) => arcGenerator({
+              ...original,
+              endAngle: interpolateAngles(t),
+            }) ?? '';
+          }),
+        (update) => update
+          .on('pointerenter', handleSlicePointer)
+          .on('pointermove', handleSlicePointer)
+          .on('pointerleave', hideTooltip)
+          .transition()
+          .duration(750)
+          .attrTween('d', (datum, index, groups: ArrayLike<SVGPathElement>) => {
+            const node = groups[index];
+            if (!(node instanceof SVGPathElement)) {
+              return () => arcGenerator(datum) ?? '';
+            }
+            const previous = node.getAttribute('d');
+            const current = arcGenerator(datum);
+            if (!previous || !current) {
+              return () => current ?? '';
+            }
+            const interpolatePath = interpolate(previous, current);
+            return (t) => interpolatePath(t);
+          }),
+        (exit) => exit
+          .transition()
+          .duration(400)
+          .style('opacity', 0)
+          .remove(),
       );
 
     chart
       .selectAll<SVGTextElement, d3.PieArcDatum<ClientDistribution>>('text')
       .data(pieGenerator(data))
       .join(
-        (enter) =>
-          enter
-            .append('text')
-            .attr('class', 'pie-label')
-            .attr('transform', (d) => `translate(${arcGenerator.centroid(d)})`)
-            .style('opacity', 0)
-            .text((d) => `${Math.round(d.data.clients)} users`)
-            .transition()
-            .delay(300)
-            .duration(500)
-            .style('opacity', 1),
-        (update) =>
-          update
-            .transition()
-            .duration(750)
-            .attr('transform', (d) => `translate(${arcGenerator.centroid(d)})`)
-            .text((d) => `${Math.round(d.data.clients)} users`),
-        (exit) =>
-          exit
-            .transition()
-            .duration(200)
-            .style('opacity', 0)
-            .remove(),
+        (enter) => enter
+          .append('text')
+          .attr('class', 'pie-label')
+          .attr('transform', (d) => toTransform(d))
+          .style('opacity', 0)
+          .text((d) => `${Math.round(d.data.clients)} users`)
+          .transition()
+          .delay(300)
+          .duration(500)
+          .style('opacity', 1),
+        (update) => update
+          .transition()
+          .duration(750)
+          .attr('transform', (d) => toTransform(d))
+          .text((d) => `${Math.round(d.data.clients)} users`),
+        (exit) => exit
+          .transition()
+          .duration(200)
+          .style('opacity', 0)
+          .remove(),
       );
   }, [colorScale, data]);
 
@@ -181,7 +194,11 @@ const ClientsPieChart = ({ data }: ClientsPieChartProps) => {
           }}
         >
           <strong>{tooltip.label}</strong>
-          <span>{tooltip.value.toLocaleString()} clients</span>
+          <span>
+            {tooltip.value.toLocaleString()}
+            {' '}
+            clients
+          </span>
         </div>
       ) : null}
       <div className="chart-legend">
@@ -192,15 +209,19 @@ const ClientsPieChart = ({ data }: ClientsPieChartProps) => {
               style={{ backgroundColor: colorScale(item.region) }}
             />
             <span className="chart-legend__label">
-              {item.region}{' '}
-              <span className="chart-legend__value">{item.clients.toLocaleString()} clients</span>
+              {item.region}
+              {' '}
+              <span className="chart-legend__value">
+                {item.clients.toLocaleString()}
+                {' '}
+                clients
+              </span>
             </span>
           </div>
         ))}
       </div>
     </div>
   );
-};
+}
 
 export default ClientsPieChart;
-

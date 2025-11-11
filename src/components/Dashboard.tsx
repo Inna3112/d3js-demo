@@ -1,13 +1,15 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import ChartCard from './ChartCard';
+
 import ClientsPieChart from './charts/ClientsPieChart';
 import SalesBarChart from './charts/SalesBarChart';
 import UsersLineChart from './charts/UsersLineChart';
-import { generateDashboardData } from '../data/mockData';
+import ChartCard from './ChartCard';
 
-const Dashboard = () => {
+import { generateDashboardData } from '@/data/mockData';
+
+function Dashboard() {
   const [dataset, setDataset] = useState(() => generateDashboardData());
   const [iteration, setIteration] = useState(1);
 
@@ -45,7 +47,7 @@ const Dashboard = () => {
     ];
   }, [dataset]);
 
-  const handleChangeData = useCallback(() => {
+  const onChangeData = useCallback(() => {
     setDataset(generateDashboardData());
     setIteration((prev) => prev + 1);
   }, []);
@@ -57,7 +59,7 @@ const Dashboard = () => {
           <span className="dashboard__cycle-label">Scenario</span>
           <span className="dashboard__cycle-value">{iteration}</span>
         </div>
-        <button type="button" className="dashboard__button" onClick={handleChangeData}>
+        <button type="button" className="dashboard__button" onClick={onChangeData}>
           Change data
         </button>
       </div>
@@ -95,7 +97,6 @@ const Dashboard = () => {
       </div>
     </section>
   );
-};
+}
 
 export default Dashboard;
-

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import {
   area as d3Area,
   axisBottom,
@@ -12,19 +13,19 @@ import {
   scalePoint,
   select,
 } from 'd3';
-import { useEffect, useRef, useState } from 'react';
-import type { UserGrowth } from '../../data/mockData';
+
+import type { UserGrowth } from '@/data/mockData';
 
 type UsersLineChartProps = {
-  data: UserGrowth[];
+  data: UserGrowth[],
 };
 
 type TooltipState = {
-  visible: boolean;
-  label: string;
-  value: number;
-  x: number;
-  y: number;
+  visible: boolean,
+  label: string,
+  value: number,
+  x: number,
+  y: number,
 };
 
 const initialTooltip: TooltipState = {
@@ -35,28 +36,30 @@ const initialTooltip: TooltipState = {
   y: 0,
 };
 
-const UsersLineChart = ({ data }: UsersLineChartProps) => {
+function UsersLineChart({ data }: UsersLineChartProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState>(initialTooltip);
 
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!svgRef.current) return () => {};
 
     const width = 640;
     const height = 360;
-    const margin = { top: 24, right: 24, bottom: 48, left: 64 };
+    const margin = {
+      top: 24, right: 24, bottom: 48, left: 64,
+    };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    const svg = select(svgRef.current);
+    const svg = select<SVGSVGElement, unknown>(svgRef.current);
     svg.selectAll('*').remove();
 
     svg
       .attr('viewBox', `0 0 ${width} ${height}`)
       .attr('preserveAspectRatio', 'xMidYMid meet');
 
-    const chart = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+    const chart = svg.append<SVGGElement>('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     const xScale = scalePoint()
       .domain(data.map((d) => d.month))
@@ -102,12 +105,15 @@ const UsersLineChart = ({ data }: UsersLineChartProps) => {
       .y1(() => innerHeight)
       .curve(curveCatmullRom.alpha(0.65));
 
-    const areaPath = chart.append('path').attr('class', 'line-area').attr('d', zeroAreaGenerator(data) ?? '');
+    const areaPath = chart
+      .append<SVGPathElement>('path')
+      .attr('class', 'line-area')
+      .attr('d', zeroAreaGenerator(data) ?? '');
 
     areaPath.transition().duration(900).attr('d', areaGenerator(data) ?? '');
 
     const linePath = chart
-      .append('path')
+      .append<SVGPathElement>('path')
       .attr('class', 'line-path')
       .attr('d', lineGenerator(data) ?? '');
 
@@ -143,34 +149,49 @@ const UsersLineChart = ({ data }: UsersLineChartProps) => {
     };
 
     chart
-      .selectAll('circle.data-point')
-      .data(data, (d) => d.month)
+      .selectAll<SVGCircleElement, UserGrowth>('circle.data-point')
+      .data<UserGrowth>(data, (datum) => datum.month)
       .join(
-        (enter) =>
-          enter
-            .append('circle')
-            .attr('class', 'data-point')
-            .attr('cx', (d) => xScale(d.month) ?? 0)
-            .attr('cy', () => yScale(0))
-            .attr('r', 0)
-            .transition()
-            .delay((_d, index) => index * 50)
-            .duration(400)
-            .attr('cy', (d) => yScale(d.users))
-            .attr('r', 4),
-        (update) =>
-          update
-            .transition()
-            .duration(700)
-            .attr('cx', (d) => xScale(d.month) ?? 0)
-            .attr('cy', (d) => yScale(d.users)),
-        (exit) =>
-          exit
-            .transition()
-            .duration(200)
-            .attr('r', 0)
-            .remove(),
+        (enter) => enter
+          .append('circle')
+          .attr('class', 'data-point')
+          .attr('cx', (d) => xScale(d.month) ?? 0)
+          .attr('cy', () => yScale(0))
+          .attr('r', 0)
+          .transition()
+          .delay((_d, index) => index * 50)
+          .duration(400)
+          .attr('cy', (d) => yScale(d.users))
+          .attr('r', 4),
+        (update) => update
+          .transition()
+          .duration(700)
+          .attr('cx', (d) => xScale(d.month) ?? 0)
+          .attr('cy', (d) => yScale(d.users)),
+        (exit) => exit
+          .transition()
+          .duration(200)
+          .attr('r', 0)
+          .remove(),
       );
+
+    const handlePointerMove = (
+      event: PointerEvent,
+      overlayNode: SVGRectElement,
+    ) => {
+      const [xPos] = pointer(event, overlayNode);
+      const clampedX = Math.max(0, Math.min(innerWidth, xPos));
+      const step = innerWidth / Math.max(1, data.length - 1);
+      const index = Math.min(
+        data.length - 1,
+        Math.max(0, Math.round(clampedX / step)),
+      );
+      const datum = data[index];
+      const cx = xScale(datum.month) ?? 0;
+      const cy = yScale(datum.users);
+      focusCircle.attr('cx', cx).attr('cy', cy).style('opacity', 1);
+      updateTooltip(event, datum);
+    };
 
     const overlay = chart
       .append('rect')
@@ -179,23 +200,19 @@ const UsersLineChart = ({ data }: UsersLineChartProps) => {
       .attr('height', innerHeight)
       .attr('fill', 'transparent')
       .attr('pointer-events', 'all')
-      .on('pointerleave', hideTooltip)
+      .on('pointerleave', () => {
+        hideTooltip();
+      })
       .on('pointerenter', () => {
         focusCircle.interrupt().style('opacity', 1);
       })
-      .on('pointermove', function (event) {
-        const [xPos] = pointer(event, this as Element);
-        const clampedX = Math.max(0, Math.min(innerWidth, xPos));
-        const step = innerWidth / Math.max(1, data.length - 1);
-        const index = Math.min(
-          data.length - 1,
-          Math.max(0, Math.round(clampedX / step)),
-        );
-        const datum = data[index];
-        const cx = xScale(datum.month) ?? 0;
-        const cy = yScale(datum.users);
-        focusCircle.attr('cx', cx).attr('cy', cy).style('opacity', 1);
-        updateTooltip(event, datum);
+      .on('pointermove', (event) => {
+        if (event instanceof PointerEvent) {
+          const overlayElement = event.currentTarget;
+          if (overlayElement instanceof SVGRectElement) {
+            handlePointerMove(event, overlayElement);
+          }
+        }
       });
 
     return () => {
@@ -215,12 +232,15 @@ const UsersLineChart = ({ data }: UsersLineChartProps) => {
           }}
         >
           <strong>{tooltip.label}</strong>
-          <span>{tooltip.value.toLocaleString()} users</span>
+          <span>
+            {tooltip.value.toLocaleString()}
+            {' '}
+            users
+          </span>
         </div>
       ) : null}
     </div>
   );
-};
+}
 
 export default UsersLineChart;
-
